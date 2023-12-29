@@ -55,7 +55,7 @@ class AStealthProjectCharacter : public ACharacter
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	float CrouchedCapsuleExpand;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleInstanceOnly, meta = (AllowPrivateAccess = "true"))
 	AActor* HeldItem;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Animation, meta = (AllowPrivateAccess = "true"))
@@ -66,10 +66,6 @@ class AStealthProjectCharacter : public ACharacter
 	FTimerHandle AttachTimerHandle;
 
 	void SetCapsuleProperties(float Radius, float HalfHeight);
-
-	void PickItem(AActor* Item);
-	void HoldItem();
-	void DropItem();
 
 public:
 	AStealthProjectCharacter();
@@ -91,6 +87,12 @@ protected:
 	void Pickup();
 
 	void TriggerCrouch();
+
+	void FaceLocation(const FVector& TargetCoordinate);
+
+	void PickItem(AActor* Item);
+	void HoldItem();
+	void DropItem();
 
 protected:
 	// APawn interface

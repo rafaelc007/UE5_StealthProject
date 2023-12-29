@@ -54,6 +54,8 @@ AStealthProjectCharacter::AStealthProjectCharacter()
 	FollowCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
 	CrouchedCapsuleExpand = 1.3f;
 
+	PickAnimationDelay = 0.1;
+
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
 }
@@ -142,9 +144,21 @@ void AStealthProjectCharacter::Look(const FInputActionValue& Value)
 	}
 }
 
+void AStealthProjectCharacter::FaceLocation(const FVector& TargetCoordinate)
+{
+// Calculate the direction vector from the character's location to the target location
+        FVector DirectionToTarget = TargetCoordinate - GetActorLocation();
+        DirectionToTarget.Z = 0; // Ignore Z component if you want to keep the character level
+
+        // Calculate the rotation needed to face the target location
+        FRotator TargetRotation = DirectionToTarget.Rotation();
+
+        // Set the actor's rotation
+        SetActorRotation(TargetRotation);
+}
+
 void AStealthProjectCharacter::Pickup()
 {
-	UE_LOG(LogTemp, Display, TEXT("Pickup"));
 	if (HeldItem)
 	{
 		DropItem();
@@ -157,6 +171,7 @@ void AStealthProjectCharacter::Pickup()
 			UE_LOG(LogTemp, Warning, TEXT("Found actor %s"), *OverlappingActor->GetActorNameOrLabel());
 			if (OverlappingActor->ActorHasTag(TEXT("Pickup")))
 			{
+				FaceLocation(OverlappingActor->GetActorLocation());
 				PickItem(OverlappingActor);
 				break;
 			}
@@ -178,7 +193,11 @@ void AStealthProjectCharacter::PickItem(AActor* Item)
 
 void AStealthProjectCharacter::HoldItem()
 {
-	if (HeldItem == nullptr) return;
+	if (HeldItem == nullptr) 
+	{
+		UE_LOG(LogTemp, Error, TEXT("Held item is empty"));
+		return;
+	}
 	FAttachmentTransformRules rules = FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true);
 	bool result = HeldItem->AttachToComponent(GetMesh(), rules, TEXT("WeaponSocket"));
 	if (result) UE_LOG(LogTemp, Warning, TEXT("Got weapon")) else UE_LOG(LogTemp, Error, TEXT("Unable to hold"));
