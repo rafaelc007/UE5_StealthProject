@@ -145,8 +145,10 @@ void AStealthProjectCharacter::Look(const FInputActionValue& Value)
 void AStealthProjectCharacter::Pickup()
 {
 	UE_LOG(LogTemp, Display, TEXT("Pickup"));
-	if (!bIsHolding)
+	if (HeldItem)
 	{
+		DropItem();
+	} else {
 		TSet<AActor*> OverlappingActors;
 		GetOverlappingActors(OverlappingActors);
 
@@ -155,24 +157,40 @@ void AStealthProjectCharacter::Pickup()
 			UE_LOG(LogTemp, Warning, TEXT("Found actor %s"), *OverlappingActor->GetActorNameOrLabel());
 			if (OverlappingActor->ActorHasTag(TEXT("Pickup")))
 			{
-				HoldItem(OverlappingActor);
+				PickItem(OverlappingActor);
 				break;
 			}
 		}
 	}
 }
 
-void AStealthProjectCharacter::HoldItem(AActor* Item)
+void AStealthProjectCharacter::PickItem(AActor* Item)
 {
 	APickableItem* item = Cast<APickableItem>(Item);
-	item->DisablePhysics();
-	item->ResetLocation();
-
+	if (item)
+	{
+		item->DisablePhysics();
+	}
 	this->HeldItem = Item;
+	// Set up the timer to call HoldItem after a specific time (e.g., 1 second)
+    GetWorldTimerManager().SetTimer(AttachTimerHandle, this, &AStealthProjectCharacter::HoldItem, PickAnimationDelay, false);
+}
+
+void AStealthProjectCharacter::HoldItem()
+{
+	if (HeldItem == nullptr) return;
 	FAttachmentTransformRules rules = FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true);
 	bool result = HeldItem->AttachToComponent(GetMesh(), rules, TEXT("WeaponSocket"));
 	if (result) UE_LOG(LogTemp, Warning, TEXT("Got weapon")) else UE_LOG(LogTemp, Error, TEXT("Unable to hold"));
-	bIsHolding = true;
+}
+
+void AStealthProjectCharacter::DropItem()
+{
+	if (HeldItem == nullptr) return;
+	HeldItem->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+	APickableItem* item = Cast<APickableItem>(HeldItem);
+	if (item) item->EnablePhysics();
+	HeldItem = nullptr;
 }
 
 void AStealthProjectCharacter::TriggerCrouch()
@@ -204,4 +222,9 @@ void AStealthProjectCharacter::OnStartCrouch(float HalfHeightAdjust, float Scale
 {
 	Super::OnStartCrouch(HalfHeightAdjust, ScaledHalfHeightAdjust);
 	SetCapsuleProperties(fCapsuleInitialRadius * CrouchedCapsuleExpand);
+}
+
+bool AStealthProjectCharacter::IsHoldingItem() const
+{
+	return HeldItem != nullptr;
 }

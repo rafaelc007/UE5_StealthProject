@@ -12,12 +12,11 @@ APickableItem::APickableItem()
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-	PickupSphere = CreateDefaultSubobject<USphereComponent>(TEXT("PickupSphere"));
-	RootComponent = PickupSphere;
-
 	Mesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Mesh"));
-	Mesh->SetupAttachment(RootComponent);
+	RootComponent = Mesh;
 
+	PickupSphere = CreateDefaultSubobject<USphereComponent>(TEXT("PickupSphere"));
+	PickupSphere->SetupAttachment(RootComponent);
 }
 
 void APickableItem::DisablePhysics()
@@ -29,25 +28,28 @@ void APickableItem::DisablePhysics()
 	}
 }
 
+void APickableItem::EnablePhysics()
+{
+	if (Mesh)
+	{
+		// Set simulate physics
+		Mesh->SetSimulatePhysics(true);
+		// Set collision behavior (optional, depending on your needs)
+		Mesh->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
+		// Disable collisions with the specified channel
+		Mesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Overlap);
+	}
+}
+
 // Called when the game starts or when spawned
 void APickableItem::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if (Mesh)
-	{
-	// Set simulate physics
-	Mesh->SetSimulatePhysics(true);
-
-	// Set collision behavior (optional, depending on your needs)
-	Mesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-
-	// Disable collisions with the specified channel
-	Mesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Overlap);
+	EnablePhysics();
 
 	// Add tags to the container
 	Tags.AddUnique(TEXT("Pickup"));
-	}	
 }
 
 // Called every frame
@@ -55,9 +57,4 @@ void APickableItem::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-}
-
-void APickableItem::ResetLocation()
-{
-	Mesh->AttachToComponent(RootComponent, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
 }

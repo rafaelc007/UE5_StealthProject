@@ -56,22 +56,29 @@ class AStealthProjectCharacter : public ACharacter
 	float CrouchedCapsuleExpand;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	float bIsHolding {false};
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	AActor* HeldItem;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Animation, meta = (AllowPrivateAccess = "true"))
+	float PickAnimationDelay;
 
 	float fCapsuleInitialRadius;
 
+	FTimerHandle AttachTimerHandle;
+
 	void SetCapsuleProperties(float Radius, float HalfHeight);
 
-	void HoldItem(AActor* Item);
+	void PickItem(AActor* Item);
+	void HoldItem();
+	void DropItem();
 
 public:
 	AStealthProjectCharacter();
 
 	virtual void OnEndCrouch(float HalfHeightAdjust, float ScaledHalfHeightAdjust) override;
 	virtual void OnStartCrouch(float HalfHeightAdjust, float ScaledHalfHeightAdjust) override;
+
+	UFUNCTION(BlueprintCallable)
+	bool IsHoldingItem() const;
 
 protected:
 

@@ -20,12 +20,11 @@ class STEALTHPROJECT_API APickableItem : public AActor
 	FVector InitialRelativeLocation;
 	
 public:
-	void ResetLocation();
-
 	// Sets default values for this actor's properties
 	APickableItem();
 
 	void DisablePhysics();
+	void EnablePhysics();
 
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
